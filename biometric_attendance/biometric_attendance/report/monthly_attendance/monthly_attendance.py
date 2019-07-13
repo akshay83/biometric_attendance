@@ -15,6 +15,7 @@ def execute(filters=None):
 		return
 
 	columns = get_columns(filters)
+	data = get_data(filters)
 
 	return columns, data
 
@@ -31,7 +32,7 @@ def get_columns(filters):
 			  "fieldname": "user_name",
 			  "fieldtype": "Data",
 			  "label": "User Name",
-			  "width": 100
+			  "width": 150
 			},
 			{
 			  "fieldname": "branch",
@@ -68,7 +69,8 @@ def get_columns(filters):
 			{
 			"fieldtype": "Data",
 			"fieldname": build_key+"attendance",
-			"label": build_key
+			"label": build_key,
+			"default": "A"
 			}
 		]
 		columns.extend(ext_col)
@@ -94,7 +96,7 @@ def get_data(filters):
 		  cast(att.timestamp as Date) as `Date`,
 		  cast(min(att.timestamp) as time) as `Entry Time`,  
 		  cast(max(att.timestamp) as time) as `Exit Time`,
-		  count(*) as `Punch Count`,
+		  ifnull(count(*),0) as `Punch Count`,
 		  if(abs(timestampdiff(MINUTE,cast(branch.opening_time as Time), cast(min(att.timestamp) as time)))<=60, 1, 0) as `On Time Entry`,
 		  if(abs(timestampdiff(MINUTE,cast(branch.closing_time as Time), cast(max(att.timestamp) as time)))<=60, 1, 0) as `On Time Exit`
 		from 
@@ -105,8 +107,8 @@ def get_data(filters):
 		  `tabBiometric Machine` machine
 		where 
 		  att.user_id = cast(substring(users.name,3) as Integer) 
-		  and `Date` >= '{from_date}'
-		  and `Date` <= '{to_date}'
+		  and cast(att.timestamp as Date) >= '{from_date}'
+		  and cast(att.timestamp as Date) <= '{to_date}'
 		  and machine.name = '{machine_name}'
 		  and machine.branch = branch.branch
 		  and enrolled.parent = machine.name
@@ -118,6 +120,8 @@ def get_data(filters):
 		  `Date`,
 		  users.name
 		) dump
+		order by
+		  dump.`User Code`
 	"""
 
 	query = query.format(**{
@@ -125,3 +129,25 @@ def get_data(filters):
 			"to_date": filters.get("to_date"),
 			"machine_name": filters.get("machine")
 			})
+
+	current_user_name = None
+	rows = []
+	current_row = {}
+	for d in frappe.db.sql(query, as_dict=1):
+		if current_user_name != d["User Code"]:
+			if current_user_name:
+				rows.append(current_row)
+			current_row = {}
+			current_user_name = d["User Code"]
+			current_row["user_name"] = d["User Name"]
+			current_row["user_code"] = d["User Code"]
+			current_row["branch"] = d["Branch"]
+
+		build_key = d["Date"].strftime('%d-%m-%Y')
+		current_row[build_key+"punch"] = d["Punch Count"]
+		current_row[build_key+"entry"] = d["Entry Time"]
+		current_row[build_key+"exit"] = d["Exit Time"]
+		current_row[build_key+"attendance"] = d["Attendance"]
+
+	return rows
+

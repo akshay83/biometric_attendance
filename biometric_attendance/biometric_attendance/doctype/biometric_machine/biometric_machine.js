@@ -38,6 +38,17 @@ frappe.ui.form.on("Biometric Machine", "refresh", function(frm) {
 					}
 				});
 			});
+			frm.add_custom_button("Clear Machine Attendance", function() {
+				frappe.call({
+					method: "biometric_attendance.biometric_attendance.utils.clear_machine_attendance",
+					args: { "machine_name": frm.doc.name },
+					callback: function(r) {
+						if (!r.exc) {
+							frappe.msgprint("Success");
+						}
+					}
+				});
+			});
 			frm.add_custom_button("Sync Users", function() {
 				frappe.call({
 					method: "biometric_attendance.biometric_attendance.utils.sync_users",

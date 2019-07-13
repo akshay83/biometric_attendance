@@ -131,4 +131,4 @@ def delete_duplicate_rows_from_attendance():
 				and (t1.user_id = t2.user_id and t1.timestamp = t2.timestamp)
 		"""
 
-	frappe.db.sql(query)
+	return frappe.db.sql(query)

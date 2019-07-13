@@ -11,6 +11,12 @@ app_color = "grey"
 app_email = "mehta.akshay@gmail.com"
 app_license = "MIT"
 
+scheduler_events = {
+	"all": [
+		"biometric_attendance.biometric_attendance.auto_import.auto_import"
+	]
+}
+
 # Includes in <head>
 # ------------------
 
