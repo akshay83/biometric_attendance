@@ -38,7 +38,7 @@ def import_attendance(machine_name=None):
 			i = i + 1
 
 	except Exception as e:
-		print e
+		frappe.throw(e)
 	finally:
 		if conn:
 			conn.disconnect()
@@ -62,7 +62,7 @@ def clear_machine_attendance(machine_name=None):
 		conn.clear_attendance()
 
 	except Exception as e:
-		print e
+		frappe.throw(e)
 	finally:
 		if conn:
 			conn.disconnect()
@@ -112,11 +112,11 @@ def sync_users(machine_name=None):
 					#conn.delete_user(uid=m.user_id)
 
 	except Exception as e:
-		print e
+		frappe.throw(e)
 	finally:
 		if conn:
 			if conn.records > 0:
-				print "Attendance Records Exists"
+				frappe.msgprint("Attendance Records Exists")
 			conn.disconnect()
 
 @frappe.whitelist()
@@ -131,4 +131,5 @@ def delete_duplicate_rows_from_attendance():
 				and (t1.user_id = t2.user_id and t1.timestamp = t2.timestamp)
 		"""
 
-	return frappe.db.sql(query)
+	frappe.db.sql(query)
+	frappe.msgprint("Success")
