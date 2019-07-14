@@ -97,8 +97,8 @@ def get_data(filters):
 		  cast(min(att.timestamp) as time) as `Entry Time`,  
 		  cast(max(att.timestamp) as time) as `Exit Time`,
 		  ifnull(count(*),0) as `Punch Count`,
-		  if(abs(timestampdiff(MINUTE,cast(branch.opening_time as Time), cast(min(att.timestamp) as time)))<=60, 1, 0) as `On Time Entry`,
-		  if(abs(timestampdiff(MINUTE,cast(branch.closing_time as Time), cast(max(att.timestamp) as time)))<=60, 1, 0) as `On Time Exit`
+		  if(timestampdiff(MINUTE,cast(if(users.differ_timings,users.allowed_entry_time,branch.opening_time) as Time), cast(min(att.timestamp) as time))<=30, 1, 0) as `On Time Entry`,
+		  if(timestampdiff(MINUTE,cast(if(users.differ_timings,users.allowed_exit_time,branch.closing_time) as Time), cast(max(att.timestamp) as time))>=-30, 1, 0) as `On Time Exit`
 		from 
 		  `tabBiometric Users` users, 
 		  `tabBiometric Attendance` att,
