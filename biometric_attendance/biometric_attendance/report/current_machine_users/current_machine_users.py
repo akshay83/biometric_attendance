@@ -48,13 +48,6 @@ def get_data(filters):
 	try:
 		conn = zk.connect()
 		users = conn.get_users()
-		att = conn.get_attendance()
-		print '----------------Attendance----------------------'
-		print att[0].status
-		print att[1].punch
-		print att[200].timestamp
-		print type(att[201])
-
 		for u in users:
 			rows.append(\
 					{\
@@ -65,8 +58,7 @@ def get_data(filters):
 				   )
 
 	except Exception as e:
-		print 'Connection Problem'
-		print e
+		frappe.throw(e)
 	finally:
 		if conn:
 			conn.disconnect()

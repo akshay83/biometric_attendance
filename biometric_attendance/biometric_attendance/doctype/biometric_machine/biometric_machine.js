@@ -26,7 +26,7 @@ frappe.ui.form.on("Enrolled Users", "user", function(frm, dt, dn) {
 });
 
 frappe.ui.form.on("Biometric Machine", "refresh", function(frm) {
-		if (!frm.doc.__islocal) {
+		if (!frm.doc.__islocal && frappe.user.has_role("System Manager", "HR Manager")) {
 			frm.add_custom_button("Import Attendance", function() {
 				frappe.call({
 					method: "biometric_attendance.biometric_attendance.utils.import_attendance",
@@ -63,15 +63,28 @@ frappe.ui.form.on("Biometric Machine", "refresh", function(frm) {
 		}
 });
 
-frappe.ui.form.on("Biometric Machine", "onload", function (frm) {
+frappe.ui.form.on("Biometric Machine", "refresh", function (frm) {
 	frappe.realtime.on("import_biometric_attendance", function(data) {
-		console.log(data);
-		if (data.progress) {
-			frappe.show_progress("Importing Attendance", data.progress / data.total * 100,
-				__("Importing {0} of {1}", [data.progress, data.total]));
+		frappe.show_progress("Importing Attendance", data.progress, data.total);
+		if (data.progress >= (data.total-1)) {
+			frappe.hide_progress("import_biometric_attendance");
 		}
-		//if (data.progress == data.total) {
-		//	window.setTimeout(
-		//}
+	});
+});
+
+
+frappe.ui.form.on("Biometric Machine", "manual_import", function(frm) {
+	if (!frappe.user.has_role("System Manager", "HR Manager")) {
+		frappe.msgprint("Not Permitted");
+		return;
+	}
+	frappe.call({
+		method: "biometric_attendance.biometric_attendance.auto_import.auto_import",
+		args: { "manual_import": 1 },
+		callback: function(r) {
+			if (!r.exc) {
+				frappe.msgprint("Success");
+			}
+		}
 	});
 });

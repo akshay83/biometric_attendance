@@ -1,4 +1,5 @@
 import frappe
+import time
 
 @frappe.whitelist()
 def get_biometric_user_name(user):
@@ -30,12 +31,12 @@ def import_attendance(machine_name=None):
 			attendance_doc.timestamp = a.timestamp
 			attendance_doc.punch = a.punch
 			attendance_doc.status = a.status
+			i = i + 1
 			frappe.publish_realtime('import_biometric_attendance', dict(
 						progress=i,
 						total=conn.records
-					))
+					), user=frappe.session.user)
 			attendance_doc.save()
-			i = i + 1
 
 	except Exception as e:
 		frappe.throw(e)
@@ -93,23 +94,23 @@ def sync_users(machine_name=None):
 				machine_user_ids.append(m.user_id)
 
 			for u in machine_doc.users:
-				uid = unicode(int(u.user[2:]))
-				system_user_ids.append(uid)
+				user_id = unicode(int(u.user[2:]))
+				system_user_ids.append(user_id)
 
 			for u in machine_doc.users:
-				uid = unicode(int(u.user[2:]))
-				if uid not in machine_user_ids:
+				user_id = unicode(int(u.user[2:]))
+				if user_id not in machine_user_ids:
 					print '-------NOT FOUND IN MACHINE ------'
-					print uid
+					print user_id
 					print u.user_name
-					#conn.set_user(uid=uid, name=u.user_name)
+					#conn.set_user(user_id=user_id, name=u.user_name)
 
 			for m in machine_users:
 				if m.user_id not in system_user_ids:
 					print '-------NOT FOUND IN SYSTEM ------'
 					print m.user_id
 					print m.name
-					#conn.delete_user(uid=m.user_id)
+					#conn.delete_user(user_id=m.user_id)
 
 	except Exception as e:
 		frappe.throw(e)

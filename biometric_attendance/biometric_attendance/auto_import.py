@@ -8,7 +8,7 @@ def get_time_difference_in_minutes(timeA, timeB):
 	return (dateTimeA-dateTimeB).total_seconds() / 60
 
 @frappe.whitelist()
-def auto_import():
+def auto_import(manual_import=0):
 	now_time = datetime.datetime.now().time()
 	today_date = datetime.date.today()
 	machines = frappe.get_all("Biometric Machine")
@@ -16,11 +16,11 @@ def auto_import():
 	for m_name in machines:
 		m = frappe.get_doc("Biometric Machine", m_name)
 		minute_diff = get_time_difference_in_minutes(get_time(now_time), get_time(m.import_at))
-		if cint(m.enabled) and m.last_import_on != today_date \
-			and abs(minute_diff) <=10:
-			do_auto_import(m)
+		if (cint(m.enabled) and m.last_import_on != today_date \
+			and abs(minute_diff) <=10) or cint(manual_import):
+			do_auto_import(m, manual_import)
 
-def do_auto_import(machine):
+def do_auto_import(machine, manual_import=0):
 	from utils import import_attendance, clear_machine_attendance
 	try:
 		import_attendance(machine.name)
@@ -28,9 +28,13 @@ def do_auto_import(machine):
 			clear_machine_attendance(machine.name)
 		machine.last_import_on = datetime.date.today()
 		machine.save()
-		send_email(success=True, machine=machine)
+		if not cint(manual_import):
+			send_email(success=True, machine=machine)
 	except Exception as e:
-		send_email(success=False, machine=machine, error_status=e)
+		if not cint(manual_import):
+			send_email(success=False, machine=machine, error_status=e)
+		else:
+			frappe.throw(e)
 
 def send_email(success, machine, error_status=None):
 	if not cint(machine.send_notification):
