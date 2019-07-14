@@ -7,7 +7,7 @@
  "doctype": "Report", 
  "idx": 0, 
  "is_standard": "Yes", 
- "modified": "2019-07-12 16:08:10.465284", 
+ "modified": "2019-07-14 10:40:19.649140", 
  "modified_by": "Administrator", 
  "module": "Biometric Attendance", 
  "name": "Current Machine Users", 
@@ -18,6 +18,9 @@
  "roles": [
   {
    "role": "System Manager"
+  }, 
+  {
+   "role": "HR Manager"
   }
  ]
 }

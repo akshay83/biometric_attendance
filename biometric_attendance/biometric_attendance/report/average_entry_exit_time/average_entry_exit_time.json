@@ -7,7 +7,7 @@
  "doctype": "Report", 
  "idx": 0, 
  "is_standard": "Yes", 
- "modified": "2019-07-12 22:52:23.808915", 
+ "modified": "2019-07-14 10:39:32.674258", 
  "modified_by": "Administrator", 
  "module": "Biometric Attendance", 
  "name": "Average Entry Exit Time", 
@@ -19,6 +19,15 @@
  "roles": [
   {
    "role": "System Manager"
+  }, 
+  {
+   "role": "Accounts Manager"
+  }, 
+  {
+   "role": "HR Manager"
+  }, 
+  {
+   "role": "HR User"
   }
  ]
 }

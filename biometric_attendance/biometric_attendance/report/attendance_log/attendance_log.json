@@ -7,7 +7,7 @@
  "doctype": "Report", 
  "idx": 0, 
  "is_standard": "Yes", 
- "modified": "2019-07-13 19:58:51.369591", 
+ "modified": "2019-07-14 10:38:02.982015", 
  "modified_by": "Administrator", 
  "module": "Biometric Attendance", 
  "name": "Attendance Log", 
@@ -19,6 +19,18 @@
  "roles": [
   {
    "role": "System Manager"
+  }, 
+  {
+   "role": "HR Manager"
+  }, 
+  {
+   "role": "HR User"
+  }, 
+  {
+   "role": "Accounts Manager"
+  }, 
+  {
+   "role": "Accounts User"
   }
  ]
 }

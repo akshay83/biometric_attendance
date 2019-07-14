@@ -17,7 +17,7 @@ def auto_import():
 		m = frappe.get_doc("Biometric Machine", m_name)
 		minute_diff = get_time_difference_in_minutes(get_time(now_time), get_time(m.import_at))
 		if cint(m.enabled) and m.last_import_on != today_date \
-			and abs(minute_diff) <=60:
+			and abs(minute_diff) <=10:
 			do_auto_import(m)
 
 def do_auto_import(machine):

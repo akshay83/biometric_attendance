@@ -65,6 +65,7 @@ frappe.ui.form.on("Biometric Machine", "refresh", function(frm) {
 
 frappe.ui.form.on("Biometric Machine", "onload", function (frm) {
 	frappe.realtime.on("import_biometric_attendance", function(data) {
+		console.log(data);
 		if (data.progress) {
 			frappe.show_progress("Importing Attendance", data.progress / data.total * 100,
 				__("Importing {0} of {1}", [data.progress, data.total]));
