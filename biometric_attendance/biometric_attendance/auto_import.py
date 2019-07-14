@@ -8,17 +8,27 @@ def get_time_difference_in_minutes(timeA, timeB):
 	return (dateTimeA-dateTimeB).total_seconds() / 60
 
 @frappe.whitelist()
-def auto_import(manual_import=0):
+def auto_import(manual_import=0, machine_name=None):
+	if not machine_name:
+		machines = frappe.get_all("Biometric Machine")
+		for m_name in machines:
+			auto_import_for_machine(machine_name=m_name, manual_import=manual_import)
+	else:
+		auto_import_for_machine(machine_name=machine_name, manual_import=manual_import)
+
+def auto_import_for_machine(machine_name=None, manual_import=0):
+	if not machine_name:
+		return
+
 	now_time = datetime.datetime.now().time()
 	today_date = datetime.date.today()
-	machines = frappe.get_all("Biometric Machine")
 
-	for m_name in machines:
-		m = frappe.get_doc("Biometric Machine", m_name)
-		minute_diff = get_time_difference_in_minutes(get_time(now_time), get_time(m.import_at))
-		if (cint(m.enabled) and m.last_import_on != today_date \
-			and abs(minute_diff) <=10) or cint(manual_import):
-			do_auto_import(m, manual_import)
+	m = frappe.get_doc("Biometric Machine", machine_name)
+
+	minute_diff = get_time_difference_in_minutes(get_time(now_time), get_time(m.import_at))
+	if (cint(m.auto_import_enabled) and m.last_import_on != today_date \
+		and abs(minute_diff) <=10) or cint(manual_import):
+		do_auto_import(m, manual_import)
 
 def do_auto_import(machine, manual_import=0):
 	from utils import import_attendance, clear_machine_attendance

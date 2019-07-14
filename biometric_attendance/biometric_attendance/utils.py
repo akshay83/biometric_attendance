@@ -6,6 +6,36 @@ def get_biometric_user_name(user):
 	return frappe.db.get_value("Biometric Users", { "name": user }, "user_name")
 
 @frappe.whitelist()
+def check_connection(machine_name=None):
+	if not machine_name:
+		return
+
+	from zk import ZK
+
+	machine_doc = frappe.get_doc("Biometric Machine", machine_name)
+
+	conn = None
+
+	success = False
+
+	try:
+		zk = ZK(machine_doc.ip_domain_address, machine_doc.port)
+		conn = zk.connect()
+
+		if conn:
+			success = True
+
+	except Exception as e:
+		frappe.throw(e)
+
+	finally:
+		if conn:
+			conn.disconnect()
+
+	return success
+
+
+@frappe.whitelist()
 def import_attendance(machine_name=None):
 	if not machine_name:
 		return
@@ -15,6 +45,8 @@ def import_attendance(machine_name=None):
 	machine_doc = frappe.get_doc("Biometric Machine", machine_name)
 
 	conn = None
+
+	success = False
 
 	try:
 		zk = ZK(machine_doc.ip_domain_address, machine_doc.port)
@@ -38,11 +70,15 @@ def import_attendance(machine_name=None):
 					), user=frappe.session.user)
 			attendance_doc.save()
 
+		success = True
+
 	except Exception as e:
 		frappe.throw(e)
 	finally:
 		if conn:
 			conn.disconnect()
+
+	return success
 
 @frappe.whitelist()
 def clear_machine_attendance(machine_name=None):
@@ -55,6 +91,8 @@ def clear_machine_attendance(machine_name=None):
 
 	machine_doc = frappe.get_doc("Biometric Machine", machine_name)
 
+	success = False
+
 	try:
 		zk = ZK(machine_doc.ip_domain_address, machine_doc.port)
 
@@ -62,11 +100,15 @@ def clear_machine_attendance(machine_name=None):
 
 		conn.clear_attendance()
 
+		success = True
+
 	except Exception as e:
 		frappe.throw(e)
 	finally:
 		if conn:
 			conn.disconnect()
+
+	return success
 
 @frappe.whitelist()
 def sync_users(machine_name=None):
@@ -78,6 +120,8 @@ def sync_users(machine_name=None):
 	conn = None
 
 	machine_doc = frappe.get_doc("Biometric Machine", machine_name)
+
+	success = False
 
 	try:
 		zk = ZK(machine_doc.ip_domain_address, machine_doc.port)
@@ -112,6 +156,8 @@ def sync_users(machine_name=None):
 					print m.name
 					#conn.delete_user(user_id=m.user_id)
 
+			success = True
+
 	except Exception as e:
 		frappe.throw(e)
 	finally:
@@ -119,6 +165,8 @@ def sync_users(machine_name=None):
 			if conn.records > 0:
 				frappe.msgprint("Attendance Records Exists")
 			conn.disconnect()
+
+	return success
 
 @frappe.whitelist()
 def delete_duplicate_rows_from_attendance():
@@ -133,4 +181,4 @@ def delete_duplicate_rows_from_attendance():
 		"""
 
 	frappe.db.sql(query)
-	frappe.msgprint("Success")
+	return True

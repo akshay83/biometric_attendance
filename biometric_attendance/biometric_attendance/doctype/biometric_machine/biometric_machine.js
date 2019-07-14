@@ -32,7 +32,7 @@ frappe.ui.form.on("Biometric Machine", "refresh", function(frm) {
 					method: "biometric_attendance.biometric_attendance.utils.import_attendance",
 					args: { "machine_name": frm.doc.name },
 					callback: function(r) {
-						if (!r.exc) {
+						if (r.message) {
 							frappe.msgprint("Success");
 						}
 					}
@@ -43,7 +43,7 @@ frappe.ui.form.on("Biometric Machine", "refresh", function(frm) {
 					method: "biometric_attendance.biometric_attendance.utils.clear_machine_attendance",
 					args: { "machine_name": frm.doc.name },
 					callback: function(r) {
-						if (!r.exc) {
+						if (r.message) {
 							frappe.msgprint("Success");
 						}
 					}
@@ -54,7 +54,7 @@ frappe.ui.form.on("Biometric Machine", "refresh", function(frm) {
 					method: "biometric_attendance.biometric_attendance.utils.sync_users",
 					args: { "machine_name": frm.doc.name },
 					callback: function(r) {
-						if (!r.exc) {
+						if (r.message) {
 							frappe.msgprint("Success");
 						}
 					}
@@ -80,9 +80,25 @@ frappe.ui.form.on("Biometric Machine", "manual_import", function(frm) {
 	}
 	frappe.call({
 		method: "biometric_attendance.biometric_attendance.auto_import.auto_import",
-		args: { "manual_import": 1 },
+		args: { "manual_import": 1, "machine_name": frm.doc.name },
 		callback: function(r) {
 			if (!r.exc) {
+				frappe.msgprint("Success");
+			}
+		}
+	});
+});
+
+frappe.ui.form.on("Biometric Machine", "check_connection", function(frm) {
+	if (!frappe.user.has_role("System Manager", "HR Manager")) {
+		frappe.msgprint("Not Permitted");
+		return;
+	}
+	frappe.call({
+		method: "biometric_attendance.biometric_attendance.utils.check_connection",
+		args: { "machine_name": frm.doc.name },
+		callback: function(r) {
+			if (r.message) {
 				frappe.msgprint("Success");
 			}
 		}
