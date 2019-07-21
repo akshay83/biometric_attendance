@@ -144,17 +144,11 @@ def sync_users(machine_name=None):
 			for u in machine_doc.users:
 				user_id = unicode(int(u.user[2:]))
 				if user_id not in machine_user_ids:
-					print '-------NOT FOUND IN MACHINE ------'
-					print user_id
-					print u.user_name
-					#conn.set_user(user_id=user_id, name=u.user_name)
+					conn.set_user(user_id=user_id, name=u.user_name)
 
 			for m in machine_users:
 				if m.user_id not in system_user_ids:
-					print '-------NOT FOUND IN SYSTEM ------'
-					print m.user_id
-					print m.name
-					#conn.delete_user(user_id=m.user_id)
+					conn.delete_user(user_id=m.user_id)
 
 			success = True
 
