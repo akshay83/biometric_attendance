@@ -12,11 +12,11 @@ frappe.query_reports["Monthly Attendance"] = {
 			"reqd": 1
 		},
 		{
-			"fieldname":"machine",
-			"label": "Machine",
+			"fieldname":"branch",
+			"label": "Branch",
 			"fieldtype": "Link",
-			"options": "Biometric Machine",
-			"reqd": 1
+			"options": "Branch",
+			"reqd": 0
 		},
 		{
 			"fieldname":"detailed_view",
