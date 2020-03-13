@@ -6,7 +6,12 @@ sys.path.append("zk")
 from zk import ZK, const
 
 conn = None
-zk = ZK('mehtamotors.no-ip.info', port=4370, timeout=5, password=0, force_udp=False, ommit_ping=False)
+host = None
+if not host:
+	print "Edit the Host First"
+	return
+
+zk = ZK(host, port=4370, timeout=5, password=0, force_udp=False, ommit_ping=False)
 try:
     print ('Connecting to device ...')
     conn = zk.connect()
