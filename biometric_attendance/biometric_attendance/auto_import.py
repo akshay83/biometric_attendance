@@ -1,78 +1,57 @@
 import frappe
 import datetime
+import time
 from frappe.utils import cint,  get_time, split_emails
 
-machine_names = None
+def get_all_machine_autoimport_info():
+	machines = frappe.get_all("Biometric Machine", filters=[{"auto_import_enabled":('=',1)}], \
+								fields=["name","import_at","last_import_on"])	
+	return machines
 
-def get_time_difference_in_minutes(timeA, timeB):
-	dateTimeA = datetime.datetime.combine(datetime.date.today(), timeA)
-	dateTimeB = datetime.datetime.combine(datetime.date.today(), timeB)
-	return (dateTimeA-dateTimeB).total_seconds() / 60
-
-def put_machine_name_and_time():
-	global machine_names
-	machine_names = []
-	machines = frappe.get_all("Biometric Machine")
-	for m_name in machines:
-		machine_doc = frappe.get_doc("Biometric Machine", m_name.name)
-		machine_names.append({
-					'name': m_name.name,
-					'import_at': machine_doc.import_at,
-					'last_import_on': machine_doc.last_import_on,
-					'import_enabled': machine_doc.auto_import_enabled,
-					'retries': 0
-				})
-	return machine_names
-
-
-def check_time_and_get_machine(machine_name):
-	now_time = datetime.datetime.now().time()
-	today_date = datetime.date.today()
-
-	for m_name in machine_names:
-		minute_diff = get_time_difference_in_minutes(get_time(now_time), get_time(m_name["import_at"]))
-		if machine_name == m_name["name"]:
-			if (cint(m_name["import_enabled"]) and m_name["last_import_on"] != today_date \
-				and abs(minute_diff) <=50 and m_name["retries"] <= 3):
-				return frappe.get_doc("Biometric Machine", m_name["name"])
-
-	return None
-
-def was_last_retry(machine):
-	for m_name in machine_names:
-		if m_name["name"] == machine.name:
-			m_name["retries"] += 1
-			if m_name["retries"] > 3:
-				return True
-			return False
-
+def was_last_retry(machine, retries):
+	current_retry = retries.get(machine)
+	if current_retry > 3:
+		return True
+	else:
+		retries.update({machine:current_retry + 1})
+		return False
 
 @frappe.whitelist()
 def auto_import(manual_import=0, machine_name=None):
-
-	if not machine_names:
-		put_machine_name_and_time()
-
 	if not machine_name:
+		retries = {}
+		do_later = []
+		machine_names = get_all_machine_autoimport_info():
 		for m_name in machine_names:
-			auto_import_for_machine(machine_name=m_name["name"], manual_import=manual_import)
+			retries.update({m_name["name"]:retries.get(m_name["name"],0)})			
+			success, error = do_auto_import(machine_name=frappe.get_doc("Biometric Machine",m_name["name"]), manual_import=manual_import)
+			if not cint(manual_import) and not success:
+				if m_name not in do_later:
+					do_later.append(m_name["name"])
+				retries.update({m_name["name"]:1})
+		do_later_queue(do_later, retries)
 	else:
-		auto_import_for_machine(machine_name=machine_name, manual_import=manual_import)
+		success, error = do_auto_import(machine_name=frappe.get_doc("Biometric Machine",m_name["name"]), manual_import=manual_import)
 
-def auto_import_for_machine(machine_name, manual_import=0):
-	if not machine_name:
+def do_later_queue(do_later, retries):
+	if not do_later or len(do_later)<=0:
 		return
+	for machinename in do_later:
+		success, error = do_auto_import(machine_name=frappe.get_doc("Biometric Machine",machinename), manual_import=manual_import)
+		if success:
+			do_later.remove(machinename)
+		elif was_last_retry(machinename, retries):
+			send_email(success=False, machine=machine, error_status=error)
+			do_later.remove(machinename)
+	if do_later and len(do_later) > 0:
+		time.sleep(300)
+		do_later_queue(do_later)
 
-	if cint(manual_import):
-		do_auto_import(machine=frappe.get_doc("Biometric Machine", machine_name), manual_import=1)
-	else:
-		do_auto_import(machine=check_time_and_get_machine(machine_name), manual_import=0)
-
-def do_auto_import(machine, manual_import=0):
+def do_auto_import(machine, manual_import=0, verbose=True):
 	from utils import import_attendance, clear_machine_attendance
 
 	if not machine:
-		return
+		return False
 
 	try:
 		import_attendance(machine.name)
@@ -82,12 +61,11 @@ def do_auto_import(machine, manual_import=0):
 		machine.save()
 		if not cint(manual_import):
 			send_email(success=True, machine=machine)
+		return True, None
 	except Exception as e:
-		if not cint(manual_import):
-			if was_last_retry(machine):
-				send_email(success=False, machine=machine, error_status=e)
-		else:
+		if cint(manual_import) and verbose:
 			frappe.throw(e)
+		return False, e
 
 def send_email(success, machine, error_status=None):
 	if not cint(machine.send_notification):
