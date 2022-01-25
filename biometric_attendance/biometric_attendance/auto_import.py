@@ -31,7 +31,7 @@ def auto_import(manual_import=0, machine_name=None):
 				retries.update({m_name["name"]:1})
 		do_later_queue(do_later, retries)
 	else:
-		success, error = do_auto_import(machine_name=frappe.get_doc("Biometric Machine",m_name["name"]), manual_import=manual_import)
+		success, error = do_auto_import(machine_name=frappe.get_doc("Biometric Machine",machine_name), manual_import=manual_import)
 
 def do_later_queue(do_later, retries):
 	if not do_later or len(do_later)<=0:
