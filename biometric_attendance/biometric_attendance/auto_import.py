@@ -21,7 +21,7 @@ def auto_import(manual_import=0, machine_name=None):
 	if not machine_name:
 		retries = {}
 		do_later = []
-		machine_names = get_all_machine_autoimport_info():
+		machine_names = get_all_machine_autoimport_info()
 		for m_name in machine_names:
 			retries.update({m_name["name"]:retries.get(m_name["name"],0)})			
 			success, error = do_auto_import(machine_name=frappe.get_doc("Biometric Machine",m_name["name"]), manual_import=manual_import)

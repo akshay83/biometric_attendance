@@ -8,7 +8,7 @@ from zk import ZK, const
 conn = None
 host = None
 if not host:
-	print "Edit the Host First"
+	print ("Edit the Host First")
 	return
 
 zk = ZK(host, port=4370, timeout=5, password=0, force_udp=False, ommit_ping=False)
