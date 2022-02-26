@@ -3,7 +3,7 @@
 import sys
 sys.path.append("zk")
 
-from zk import ZK, const
+from .zk import ZK, const
 
 conn = None
 host = None
