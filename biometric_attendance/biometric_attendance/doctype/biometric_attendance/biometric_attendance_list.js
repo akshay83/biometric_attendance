@@ -14,7 +14,7 @@ frappe.listview_settings['Biometric Attendance'] = {
         get_indicator: function (doc) {
                 //Override Get Indicator as Integer value of "status" field gives error
                 //https://github.com/frappe/frappe/pull/2660
-                return [];
+                return [doc.status];
         }
 }
 

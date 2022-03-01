@@ -144,32 +144,32 @@ def get_summary_columns():
 def get_data(filters):
 	query = """
 		select
-		  users.name as `User Code`,
-		  users.user_name as `User Name`,
-		  users.branch as `Branch`,
-		  if(users.differ_timings=1, users.allowed_entry_time, branch.opening_time) as `Opening Time`,
-		  if(users.differ_timings=1, users.allowed_exit_time, branch.closing_time) as `Closing Time`,
-		  cast(att.timestamp as Date) as `Date`,
-		  cast(min(att.timestamp) as time) as `Entry Time`,
-		  cast(max(att.timestamp) as time) as `Exit Time`,
-		  ifnull(count(*),0) as `Punch Count`,
-		  if(timestampdiff(MINUTE,cast(if(users.differ_timings=1,users.allowed_entry_time,branch.opening_time) as Time), cast(min(att.timestamp) as time))<=30, 1, 0) as `On Time Entry`,
-		  if(timestampdiff(MINUTE,cast(if(users.differ_timings=1,users.allowed_exit_time,branch.closing_time) as Time), cast(max(att.timestamp) as time))>=-30, 1, 0) as `On Time Exit`
+			users.name as `User Code`,
+			users.user_name as `User Name`,
+			users.branch as `Branch`,
+			if(users.differ_timings=1, users.allowed_entry_time, branch.opening_time) as `Opening Time`,
+			if(users.differ_timings=1, users.allowed_exit_time, branch.closing_time) as `Closing Time`,
+			cast(att.timestamp as Date) as `Date`,
+			cast(min(att.timestamp) as time) as `Entry Time`,
+			cast(max(att.timestamp) as time) as `Exit Time`,
+			ifnull(count(*),0) as `Punch Count`,
+			if(timestampdiff(MINUTE,cast(if(users.differ_timings=1,users.allowed_entry_time,branch.opening_time) as Time), cast(min(att.timestamp) as time))<=30, 1, 0) as `On Time Entry`,
+			if(timestampdiff(MINUTE,cast(if(users.differ_timings=1,users.allowed_exit_time,branch.closing_time) as Time), cast(max(att.timestamp) as time))>=-30, 1, 0) as `On Time Exit`
 		from
-		  `tabBiometric Users` users,
-		  `tabBiometric Attendance` att,
-		  `tabBranch Settings` branch
+			`tabBiometric Users` users,
+			`tabBiometric Attendance` att,
+			`tabBranch Settings` branch
 		where
-		  att.user_id = cast(substring(users.name,3) as Integer)
-		  and cast(att.timestamp as Date) >= '{from_date}'
-		  and cast(att.timestamp as Date) <= '{to_date}'
-		  and branch.branch like '{branch}'
-		  and users.branch = branch.branch
+			att.user_id = cast(substring(users.name,3) as Integer)
+			and cast(att.timestamp as Date) >= '{from_date}'
+			and cast(att.timestamp as Date) <= '{to_date}'
+			and branch.branch like '{branch}'
+			and users.branch = branch.branch
 		group by
-		  `Date`,
-		  users.name
+			`Date`,
+			users.name
 		order by
-		  `User Code`
+			`User Code`
 	"""
 
 	query = query.format(**{
@@ -189,7 +189,7 @@ def get_data(filters):
 		if current_user_name != d["User Code"]:
 			if current_user_name:
 				current_row["biometric_attendance"] = DateTimeEncoder().encode(sorted(ba, key=lambda k: k['Date']))
-                total_working_days = total_P + math.ceil(total_H/2.0)
+				total_working_days = total_P + math.ceil(total_H/2.0)
 				total_weekly_off_allowed = round(total_working_days / 7.0, 0)
 				leaves = 0
 				if total_A > 0:
