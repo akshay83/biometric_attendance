@@ -24,20 +24,20 @@ def auto_import(manual_import=0, machine_name=None):
 		machine_names = get_all_machine_autoimport_info()
 		for m_name in machine_names:
 			retries.update({m_name["name"]:retries.get(m_name["name"],0)})			
-			success, error = do_auto_import(machine_name=frappe.get_doc("Biometric Machine",m_name["name"]), manual_import=manual_import)
+			success, error = do_auto_import(machine=frappe.get_doc("Biometric Machine",m_name["name"]), manual_import=manual_import)
 			if not cint(manual_import) and not success:
 				if m_name not in do_later:
 					do_later.append(m_name["name"])
 				retries.update({m_name["name"]:1})
 		do_later_queue(do_later, retries)
 	else:
-		success, error = do_auto_import(machine_name=frappe.get_doc("Biometric Machine",machine_name), manual_import=manual_import)
+		success, error = do_auto_import(machine=frappe.get_doc("Biometric Machine",machine_name), manual_import=manual_import)
 
 def do_later_queue(do_later, retries):
 	if not do_later or len(do_later)<=0:
 		return
 	for machinename in do_later:
-		success, error = do_auto_import(machine_name=frappe.get_doc("Biometric Machine",machinename), manual_import=manual_import)
+		success, error = do_auto_import(machine=frappe.get_doc("Biometric Machine",machinename), manual_import=manual_import)
 		if success:
 			do_later.remove(machinename)
 		elif was_last_retry(machinename, retries):
@@ -48,7 +48,7 @@ def do_later_queue(do_later, retries):
 		do_later_queue(do_later)
 
 def do_auto_import(machine, manual_import=0, verbose=True):
-	from utils import import_attendance, clear_machine_attendance
+	from .utils import import_attendance, clear_machine_attendance
 
 	if not machine:
 		return False

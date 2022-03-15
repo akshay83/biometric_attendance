@@ -15,7 +15,7 @@ scheduler_events = {
 	#Fire at 3pm everyday 
 	#https://www.netiq.com/documentation/cloud-manager-2-5/ncm-reference/data/bexyssf.html
 	"cron" : {
-		"0 0 15 * * ?": [
+		"0 15 * * *": [
 			"biometric_attendance.biometric_attendance.auto_import.auto_import"
 		]
 	}
