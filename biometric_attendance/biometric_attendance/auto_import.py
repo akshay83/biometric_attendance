@@ -17,7 +17,7 @@ def was_last_retry(machine, retries):
 		return False
 
 @frappe.whitelist()
-def auto_import(manual_import=0, machine_name=None):
+def auto_import(manual_import=0, machine_name=None, verbose=False):
 	if not machine_name:
 		retries = {}
 		do_later = []
@@ -26,14 +26,16 @@ def auto_import(manual_import=0, machine_name=None):
 			retries.update({m_name["name"]:retries.get(m_name["name"],0)})			
 			success, error = do_auto_import(machine=frappe.get_doc("Biometric Machine",m_name["name"]), manual_import=manual_import)
 			if not cint(manual_import) and not success:
-				if m_name not in do_later:
+				if m_name["name"] not in do_later:
 					do_later.append(m_name["name"])
 				retries.update({m_name["name"]:1})
-		do_later_queue(do_later, retries)
+			if verbose:
+				print ("Auto Import:Do Later:", do_later)
+		do_later_queue(do_later, retries, manual_import=manual_import)
 	else:
 		success, error = do_auto_import(machine=frappe.get_doc("Biometric Machine",machine_name), manual_import=manual_import)
 
-def do_later_queue(do_later, retries):
+def do_later_queue(do_later, retries, manual_import=0):
 	if not do_later or len(do_later)<=0:
 		return
 	for machinename in do_later:
@@ -44,13 +46,14 @@ def do_later_queue(do_later, retries):
 			send_email(success=False, machine=machine, error_status=error)
 			do_later.remove(machinename)
 	if do_later and len(do_later) > 0:
-		time.sleep(300)
-		do_later_queue(do_later)
+		time.sleep(60)
+		do_later_queue(do_later, retries, manual_import)
 
 def do_auto_import(machine, manual_import=0, verbose=True):
 	from .utils import import_attendance, clear_machine_attendance
-
-	if not machine:
+	if verbose:
+		print ("Do Auto Import, Machine:", machine)
+	if not machine:		
 		return False
 
 	try:
@@ -59,12 +62,17 @@ def do_auto_import(machine, manual_import=0, verbose=True):
 			clear_machine_attendance(machine.name)
 		machine.last_import_on = datetime.date.today()
 		machine.save()
+		frappe.db.commit()
 		if not cint(manual_import):
 			send_email(success=True, machine=machine)
+		if verbose:
+			print ("Successfully Imported:", machine.name)
 		return True, None
 	except Exception as e:
 		if cint(manual_import) and verbose:
 			frappe.throw(e)
+		if verbose:
+			print ("Failed Importing:", machine.name)
 		return False, e
 
 def send_email(success, machine, error_status=None):
