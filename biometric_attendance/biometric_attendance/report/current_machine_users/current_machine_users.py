@@ -42,9 +42,7 @@ def get_data(filters):
 
 	zk = ZK(machine_doc.ip_domain_address, machine_doc.port)
 	conn = None
-
 	rows = []
-
 	try:
 		conn = zk.connect()
 		users = conn.get_users()

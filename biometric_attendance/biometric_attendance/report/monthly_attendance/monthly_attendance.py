@@ -188,21 +188,7 @@ def get_data(filters):
 	for d in frappe.db.sql(query, as_dict=1):
 		if current_user_name != d["User Code"]:
 			if current_user_name:
-				current_row["biometric_attendance"] = DateTimeEncoder().encode(sorted(ba, key=lambda k: k['Date']))
-				total_working_days = total_P + math.ceil(total_H/2.0)
-				total_weekly_off_allowed = round(total_working_days / 7.0, 0)
-				leaves = 0
-				if total_A > 0:
-					leaves = 1
-				current_row["absent"] = total_A
-				current_row["halfday"] = total_H
-				current_row["present"] = total_P
-				current_row["total_present"] = total_working_days
-				current_row["total_off"] = total_weekly_off_allowed
-				current_row["leave"] = leaves
-				current_row["final_working"] = total_weekly_off_allowed + total_working_days + leaves
-
-				rows.append(current_row)
+				append_record(rows, current_row, total_H, total_A, total_P, ba)
 			current_row = {}
 			current_user_name = d["User Code"]
 			current_row["user_name"] = d["User Name"]
@@ -225,7 +211,7 @@ def get_data(filters):
 		elif current_row[build_key+"attendance"] == "H":
 			total_H = total_H + 1
 			total_A = total_A - 1
-
+	append_record(rows, current_row, total_H, total_A, total_P, ba)
 	return rows
 
 def get_final_attendance(record):
@@ -238,6 +224,21 @@ def get_final_attendance(record):
 	else:
 		return "A"
 
+def append_record(rows, current_row, total_H, total_A, total_P, ba):
+	current_row["biometric_attendance"] = DateTimeEncoder().encode(sorted(ba, key=lambda k: k['Date']))
+	total_working_days = total_P + math.ceil(total_H/2.0)
+	total_weekly_off_allowed = round(total_working_days / 7.0, 0)
+	leaves = 0
+	if total_A > 0:
+		leaves = 1
+	current_row["absent"] = total_A
+	current_row["halfday"] = total_H
+	current_row["present"] = total_P
+	current_row["total_present"] = total_working_days
+	current_row["total_off"] = total_weekly_off_allowed
+	current_row["leave"] = leaves
+	current_row["final_working"] = total_weekly_off_allowed + total_working_days + leaves
+	rows.append(current_row)	
 
 def get_biometric_attendance(filters, user=None, employee=None):
 	if not user and not employee:
